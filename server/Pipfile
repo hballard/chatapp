@@ -1,0 +1,16 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[packages]
+
+sanic = "*"
+graphql-ws = {git = "https://github.com/hballard/graphql-ws.git", ref = "pubsub"}
+graphene = "*"
+
+
+[dev-packages]
+

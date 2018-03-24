@@ -10,8 +10,11 @@ name = "pypi"
 sanic = "*"
 graphql-ws = {git = "https://github.com/hballard/graphql-ws.git", ref = "pubsub"}
 graphene = "*"
+asyncpg = "*"
 
 
 [dev-packages]
 
 neovim = "*"
+"flake8" = "*"
+yapf = "*"

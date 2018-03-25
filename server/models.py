@@ -29,8 +29,9 @@ messages_table = """CREATE TABLE IF NOT EXISTS messages (
 async def register_db(app, loop):
 
     # create connection pool and attach to app object
-    app.pool = await create_pool(**DB_CONFIG, loop=loop, max_size=100)
+    app.pool = await create_pool(**DB_CONFIG)
 
     async with app.pool.acquire() as conn:
-        await conn.execute(users_table)
-        await conn.execute(messages_table)
+        async with conn.transaction():
+            await conn.execute(users_table)
+            await conn.execute(messages_table)

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "eb1b1bf40e042acf7ee41bc1b22eb051454b4f13cbe2d80c770a9b2ce432eefd"
+            "sha256": "95de43a2920c5b72175e9c1d93da9d8006062d7ffe75e7e890f6b686e950b36a"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -34,6 +34,13 @@
             ],
             "version": "==0.3.2"
         },
+        "aniso8601": {
+            "hashes": [
+                "sha256:f7052eb342bf2000c6264a253acedb362513bf9270800be2bc8e3e229fe08b5a",
+                "sha256:7cf068e7aec00edeb21879c2bbda048656c34d281e133a77425be03b352122d8"
+            ],
+            "version": "==3.0.0"
+        },
         "asyncpg": {
             "hashes": [
                 "sha256:292d9827f9db1acb681c5aabc9df02c5bf6cf58dfd733b3319d37451cb67c86b",
@@ -52,10 +59,10 @@
         },
         "graphene": {
             "hashes": [
-                "sha256:698543001858c908c5e3526ddf38ae1d13049c6c1313ec3bb0afad02c81bd242",
-                "sha256:0763563fdccb6817311f15d0f0a4d4fe820a46cbe5de022076f95cd99413fd0f"
+                "sha256:dc95daa3f808fa1c1b26b780d103216a3d562eb95f72744a054b5bf6609d5c5c",
+                "sha256:cf8c7fd4dc74c959a44cd817d9e1b07abad185bbf586aac1f75650c1abdd5d31"
             ],
-            "version": "==2.0.1"
+            "version": "==2.1"
         },
         "graphql-core": {
             "hashes": [
@@ -82,9 +89,9 @@
         },
         "httptools": {
             "hashes": [
-                "sha256:f50dcb27178416c3a4113e9e1b392be5d1ff56ae1e474fe80869ed8530505e4c"
+                "sha256:04c7703bbef0e8ca28b09811547352b8c7c20549eab70dc24e536bb24fd2b7c5"
             ],
-            "version": "==0.0.10"
+            "version": "==0.0.11"
         },
         "iso8601": {
             "hashes": [

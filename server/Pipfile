@@ -7,12 +7,12 @@ name = "pypi"
 
 [packages]
 
-sanic = "*"
+Sanic = "*"
 graphql-ws = {git = "https://github.com/hballard/graphql-ws.git", ref = "pubsub"}
 graphene = "*"
 asyncpg = "*"
 "iso8601" = "*"
-sanic-graphql = "*"
+Sanic-GraphQL = "*"
 
 
 [dev-packages]

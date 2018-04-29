@@ -50,18 +50,18 @@ class AddUser(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
         password = graphene.String(required=True)
-        avatar_url = graphene.String()
+        avatar_url = graphene.String(default_value=None)
 
     ok = graphene.Boolean()
     user = graphene.Field(lambda: User)
 
-    async def mutate(self, info, name, password, avatar_url=None):
+    async def mutate(self, info, name, password, avatar_url):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
                 result = await conn.fetchrow(f'''INSERT INTO users
                                              (id, name, password, avatar_url)
-                                             VALUES (DEFAULT, $1, $2,
-                                             $3) RETURNING *''',
+                                             VALUES (DEFAULT, $1, $2, $3)
+                                             RETURNING *''',
                                              name, password, avatar_url)
                 user = User(**result)
                 ok = True
@@ -72,26 +72,26 @@ class EditUser(graphene.Mutation):
 
     class Arguments:
         id = graphene.ID(required=True)
-        name = graphene.String()
-        password = graphene.String()
-        avatar_url = graphene.String()
+        name = graphene.String(default_value=None)
+        password = graphene.String(default_value=None)
+        avatar_url = graphene.String(default_value=None)
 
     ok = graphene.Boolean()
     user = graphene.Field(lambda: User)
 
-    async def mutate(self, info, id, name=None, password=None,
-                     avatar_url=None):
+    async def mutate(self, info, **kwargs):
+        id = kwargs['id']
+        update_columns = [k for k, v in kwargs[1:] if k[v]]
+        update_values = [v for k, v in kwargs[1:] if k[v]]
         _, id = from_global_id(id)
+        query_string = f'''UPDATE users
+                          SET ({}) = ($2, $3, $4)
+                          WHERE id = $1
+                          RETURNING *'''
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                result = await conn.fetchrow(f'''UPDATE users
-                                             SET name = $1,
-                                             password = $2,
-                                             avatar_url = $3
-                                             WHERE id = $4
-                                             RETURNING *''',
-                                             name, password, avatar_url,
-                                             int(id))
+                result = await conn.fetchrow(query_string,
+                                             int(id), *update_values)
                 user = User(**result)
                 ok = True
                 return EditUser(user=user, ok=ok)

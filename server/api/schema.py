@@ -22,7 +22,7 @@ class User(graphene.ObjectType):
     async def resolve_messages(self, info):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                result = await conn.fetch(f'''SELECT *
+                result = await conn.fetch('''SELECT *
                                           FROM messages
                                           WHERE user_id = $1''',
                                           self.id)
@@ -32,7 +32,7 @@ class User(graphene.ObjectType):
     async def get_node(cls, info, id):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                record = await conn.fetchrow(f'''SELECT *
+                record = await conn.fetchrow('''SELECT *
                                              FROM users
                                              WHERE id = $1''',
                                              id)
@@ -50,15 +50,15 @@ class AddUser(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
         password = graphene.String(required=True)
-        avatar_url = graphene.String(default_value=None)
+        avatar_url = graphene.String()
 
     ok = graphene.Boolean()
     user = graphene.Field(lambda: User)
 
-    async def mutate(self, info, name, password, avatar_url):
+    async def mutate(self, info, name, password, avatar_url=None):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                result = await conn.fetchrow(f'''INSERT INTO users
+                result = await conn.fetchrow('''INSERT INTO users
                                              (id, name, password, avatar_url)
                                              VALUES (DEFAULT, $1, $2, $3)
                                              RETURNING *''',
@@ -80,18 +80,26 @@ class EditUser(graphene.Mutation):
     user = graphene.Field(lambda: User)
 
     async def mutate(self, info, **kwargs):
-        id = kwargs['id']
-        update_columns = [k for k, v in kwargs[1:] if k[v]]
-        update_values = [v for k, v in kwargs[1:] if k[v]]
-        _, id = from_global_id(id)
+        _, id = from_global_id(kwargs['id'])
+        del kwargs['id']
+
+        columns = [k for k in kwargs.keys() if kwargs[k]]
+        update_columns = (', ').join(columns)
+
+        values = [v for v in kwargs.values() if v]
+
+        index = [i for i, v in enumerate(columns, start=2)]
+        update_index = (', ').join(['${}'.format(i) for i in index])
+
         query_string = f'''UPDATE users
-                          SET ({}) = ($2, $3, $4)
+                          SET ({update_columns}) = ROW ({update_index})
                           WHERE id = $1
                           RETURNING *'''
+
         async with app.pool.acquire() as conn:
             async with conn.transaction():
                 result = await conn.fetchrow(query_string,
-                                             int(id), *update_values)
+                                             int(id), *values)
                 user = User(**result)
                 ok = True
                 return EditUser(user=user, ok=ok)
@@ -118,7 +126,7 @@ class Message(graphene.ObjectType):
     async def resolve_user(self, info):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                record = await conn.fetchrow(f'''SELECT *
+                record = await conn.fetchrow('''SELECT *
                                              FROM users
                                              WHERE id = $1''',
                                              self.user_id)
@@ -128,7 +136,7 @@ class Message(graphene.ObjectType):
     async def get_node(cls, info, id):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                record = await conn.fetchrow(f'''SELECT *
+                record = await conn.fetchrow('''SELECT *
                                              FROM messages
                                              WHERE id = $1''',
                                              id)

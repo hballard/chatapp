@@ -83,13 +83,23 @@ class EditUser(graphene.Mutation):
         _, id = from_global_id(kwargs['id'])
         del kwargs['id']
 
-        columns = [k for k in kwargs.keys() if kwargs[k]]
+        i = 2
+        index = []
+        columns = []
+        values = []
+
+        for key, val in kwargs.items():
+            if val != "NULL":
+                values.append(val)
+                columns.append(key)
+                index.append('${}'.format(i))
+                i += 1
+            else:
+                index.append("NULL")
+                columns.append(key)
+
         update_columns = (', ').join(columns)
-
-        values = [v for v in kwargs.values() if v]
-
-        index = [i for i, v in enumerate(columns, start=2)]
-        update_index = (', ').join(['${}'.format(i) for i in index])
+        update_index = (', ').join(index)
 
         query_string = f'''UPDATE users
                           SET ({update_columns}) = ROW ({update_index})
@@ -162,16 +172,27 @@ class Message(graphene.ObjectType):
                 return Message(**dict(record))
 
 
-# class AddMessage(graphene.Mutation):
-    # pass
+class AddMessage(graphene.Mutation):
 
+    class Arguments:
+        message = graphene.String(required=True)
+        user_id = graphene.ID(required=True)
 
-# class EditMessage(graphene.Mutation):
-    # pass
+    ok = graphene.Boolean()
+    message = graphene.Field(lambda: Message)
 
-
-# class DeleteMessage(graphene.Mutation):
-    # pass
+    async def mutate(self, info, message, user_id):
+        _, user_id = from_global_id(user_id)
+        async with app.pool.acquire() as conn:
+            async with conn.transaction():
+                result = await conn.fetchrow('''INSERT INTO messages
+                                             (id, datetime, message, user_id)
+                                             VALUES (DEFAULT, NOW(), $1, $2)
+                                             RETURNING *''',
+                                             message, int(user_id))
+                message = Message(**result)
+                ok = True
+                return AddMessage(message=message, ok=ok)
 
 
 class Messages(graphene.relay.Connection):
@@ -204,6 +225,7 @@ class Mutation(graphene.ObjectType):
     add_user = AddUser.Field()
     edit_user = EditUser.Field()
     delete_user = DeleteUser.Field()
+    add_message = AddMessage.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

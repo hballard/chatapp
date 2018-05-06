@@ -105,8 +105,27 @@ class EditUser(graphene.Mutation):
                 return EditUser(user=user, ok=ok)
 
 
-# class DeleteUser(graphene.Mutation):
-    # pass
+class DeleteUser(graphene.Mutation):
+
+    class Arguments:
+        id = graphene.ID(required=True)
+
+    ok = graphene.Boolean()
+    user = graphene.Field(lambda: User)
+
+    async def mutate(self, info, id):
+        _, id = from_global_id(id)
+
+        query_string = '''DELETE FROM users
+                          WHERE id = $1
+                          RETURNING *'''
+
+        async with app.pool.acquire() as conn:
+            async with conn.transaction():
+                result = await conn.fetchrow(query_string, int(id))
+                user = User(**result)
+                ok = True
+                return DeleteUser(user=user, ok=ok)
 
 
 class Message(graphene.ObjectType):
@@ -184,6 +203,7 @@ class Mutation(graphene.ObjectType):
 
     add_user = AddUser.Field()
     edit_user = EditUser.Field()
+    delete_user = DeleteUser.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

@@ -5,12 +5,10 @@ name = "pypi"
 
 [packages]
 Sanic = "*"
-graphql-ws = {git = "https://github.com/hballard/graphql-ws.git", ref = "pubsub"}
 graphene = "*"
 asyncpg = "*"
 "iso8601" = "*"
 Sanic-GraphQL = "*"
-graphql-server-core = "*"
 
 [dev-packages]
 neovim = "*"

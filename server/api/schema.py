@@ -1,8 +1,12 @@
+import asyncio
 import graphene
 from graphene.types.datetime import DateTime
 from graphql_relay import to_global_id, from_global_id
+from graphql_ws.pubsub import AsyncioPubsub
 
 from . import app
+
+pubsub = AsyncioPubsub()
 
 
 class User(graphene.ObjectType):
@@ -45,6 +49,65 @@ class Users(graphene.relay.Connection):
         node = User
 
 
+class Message(graphene.ObjectType):
+
+    class Meta:
+        interfaces = (graphene.relay.Node, )
+
+    id = graphene.ID(required=True)
+    datetime = DateTime()
+    message = graphene.String()
+    user_id = graphene.Int()
+    user = graphene.Field(lambda: User)
+
+    async def resolve_id(self, info):
+        return to_global_id('Message', self.id)
+
+    async def resolve_user(self, info):
+        async with app.pool.acquire() as conn:
+            async with conn.transaction():
+                record = await conn.fetchrow('''SELECT *
+                                             FROM users
+                                             WHERE id = $1''',
+                                             self.user_id)
+                return User(**dict(record))
+
+    @classmethod
+    async def get_node(cls, info, id):
+        async with app.pool.acquire() as conn:
+            async with conn.transaction():
+                record = await conn.fetchrow('''SELECT *
+                                             FROM messages
+                                             WHERE id = $1''',
+                                             id)
+                return Message(**dict(record))
+
+
+class Messages(graphene.relay.Connection):
+
+    class Meta:
+        node = Message
+
+
+class Query(graphene.ObjectType):
+
+    users = graphene.relay.ConnectionField(Users)
+    messages = graphene.relay.ConnectionField(Messages)
+    node = graphene.relay.Node.Field()
+
+    async def resolve_users(self, info, **args):
+        async with app.pool.acquire() as conn:
+            async with conn.transaction():
+                result = await conn.fetch('SELECT * FROM users')
+                return [User(**dict(record)) for record in result]
+
+    async def resolve_messages(self, info, **args):
+        async with app.pool.acquire() as conn:
+            async with conn.transaction():
+                result = await conn.fetch('SELECT * FROM messages')
+                return [Message(**dict(record)) for record in result]
+
+
 class AddUser(graphene.Mutation):
 
     class Arguments:
@@ -72,9 +135,9 @@ class EditUser(graphene.Mutation):
 
     class Arguments:
         id = graphene.ID(required=True)
-        name = graphene.String(default_value=None)
-        password = graphene.String(default_value=None)
-        avatar_url = graphene.String(default_value=None)
+        name = graphene.String()
+        password = graphene.String()
+        avatar_url = graphene.String()
 
     ok = graphene.Boolean()
     user = graphene.Field(lambda: User)
@@ -138,40 +201,6 @@ class DeleteUser(graphene.Mutation):
                 return DeleteUser(user=user, ok=ok)
 
 
-class Message(graphene.ObjectType):
-
-    class Meta:
-        interfaces = (graphene.relay.Node, )
-
-    id = graphene.ID(required=True)
-    datetime = DateTime()
-    message = graphene.String()
-    user_id = graphene.Int()
-    user = graphene.Field(lambda: User)
-
-    async def resolve_id(self, info):
-        return to_global_id('Message', self.id)
-
-    async def resolve_user(self, info):
-        async with app.pool.acquire() as conn:
-            async with conn.transaction():
-                record = await conn.fetchrow('''SELECT *
-                                             FROM users
-                                             WHERE id = $1''',
-                                             self.user_id)
-                return User(**dict(record))
-
-    @classmethod
-    async def get_node(cls, info, id):
-        async with app.pool.acquire() as conn:
-            async with conn.transaction():
-                record = await conn.fetchrow('''SELECT *
-                                             FROM messages
-                                             WHERE id = $1''',
-                                             id)
-                return Message(**dict(record))
-
-
 class AddMessage(graphene.Mutation):
 
     class Arguments:
@@ -192,32 +221,8 @@ class AddMessage(graphene.Mutation):
                                              message, int(user_id))
                 message = Message(**result)
                 ok = True
+                await pubsub.publish('messages', message)
                 return AddMessage(message=message, ok=ok)
-
-
-class Messages(graphene.relay.Connection):
-
-    class Meta:
-        node = Message
-
-
-class Query(graphene.ObjectType):
-
-    users = graphene.relay.ConnectionField(Users)
-    messages = graphene.relay.ConnectionField(Messages)
-    node = graphene.relay.Node.Field()
-
-    async def resolve_users(self, info, **args):
-        async with app.pool.acquire() as conn:
-            async with conn.transaction():
-                result = await conn.fetch('SELECT * FROM users')
-                return [User(**dict(record)) for record in result]
-
-    async def resolve_messages(self, info, **args):
-        async with app.pool.acquire() as conn:
-            async with conn.transaction():
-                result = await conn.fetch('SELECT * FROM messages')
-                return [Message(**dict(record)) for record in result]
 
 
 class Mutation(graphene.ObjectType):
@@ -228,4 +233,19 @@ class Mutation(graphene.ObjectType):
     add_message = AddMessage.Field()
 
 
-schema = graphene.Schema(query=Query, mutation=Mutation)
+class Subscription(graphene.ObjectType):
+
+    message = graphene.Field(lambda: Message)
+
+    async def resolve_message(self, info):
+        try:
+            sub_id, q = pubsub.subscribe_to_channel('messages')
+            while True:
+                payload = await q.get()
+                yield payload
+        except asyncio.CancelledError:
+            pubsub.unsubscribe('messages', sub_id)
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation,
+                         subscription=Subscription)

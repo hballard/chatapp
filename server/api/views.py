@@ -1,4 +1,5 @@
 from graphql.execution.executors.asyncio import AsyncioExecutor
+from graphql_ws.websockets_lib import WsLibSubscriptionServer
 from sanic_graphql import GraphQLView
 
 from . import app
@@ -11,3 +12,12 @@ def init_graphql(app, loop):
         GraphQLView.as_view(
             schema=schema, graphiql=True, executor=AsyncioExecutor(loop=loop)),
         '/graphql')
+
+
+subscription_server = WsLibSubscriptionServer(schema)
+
+
+@app.websocket('/subscriptions', subprotocols=['graphql-ws'])
+async def subscriptions(request, ws):
+    await subscription_server.handle(ws)
+    return ws

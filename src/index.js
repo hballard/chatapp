@@ -1,8 +1,28 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import registerServiceWorker from './registerServiceWorker';
+import React from 'react'
+import { render } from 'react-dom'
+import ApolloClient from 'apollo-boost'
+import { ApolloProvider } from 'react-apollo'
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
+import './assets/styles/App.css'
 
-ReactDOM.render(<App />, document.getElementById('root'));
-registerServiceWorker();
+import App from './App.js'
+
+const client = new ApolloClient({
+  uri: 'http://localhost:5000/graphql'
+})
+
+//const theme = createMuiTheme({
+  //palette: {
+    //type: 'dark',
+  //},
+//})
+
+const ChatApp = () => (
+  <ApolloProvider client={client}>
+    <MuiThemeProvider theme={createMuiTheme()}>
+      <App />
+    </MuiThemeProvider>
+  </ApolloProvider>
+)
+
+render(<ChatApp />, document.getElementById('root'))

@@ -26,9 +26,9 @@ class User(graphene.ObjectType):
     async def resolve_messages(self, info):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                result = await conn.fetch('''SELECT *
-                                          FROM messages
-                                          WHERE user_id = $1''',
+                result = await conn.fetch('SELECT *'
+                                          'FROM messages'
+                                          'WHERE user_id = $1',
                                           self.id)
                 return [Message(**dict(record)) for record in result]
 
@@ -36,9 +36,9 @@ class User(graphene.ObjectType):
     async def get_node(cls, info, id):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                record = await conn.fetchrow('''SELECT *
-                                             FROM users
-                                             WHERE id = $1''',
+                record = await conn.fetchrow('SELECT *'
+                                             'FROM users'
+                                             'WHERE id = $1',
                                              id)
                 return User(**record)
 
@@ -66,9 +66,9 @@ class Message(graphene.ObjectType):
     async def resolve_user(self, info):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                record = await conn.fetchrow('''SELECT *
-                                             FROM users
-                                             WHERE id = $1''',
+                record = await conn.fetchrow('SELECT *'
+                                             'FROM users'
+                                             'WHERE id = $1',
                                              self.user_id)
                 return User(**dict(record))
 
@@ -76,9 +76,9 @@ class Message(graphene.ObjectType):
     async def get_node(cls, info, id):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                record = await conn.fetchrow('''SELECT *
-                                             FROM messages
-                                             WHERE id = $1''',
+                record = await conn.fetchrow('SELECT *'
+                                             'FROM messages'
+                                             'WHERE id = $1',
                                              id)
                 return Message(**dict(record))
 
@@ -121,10 +121,10 @@ class AddUser(graphene.Mutation):
     async def mutate(self, info, name, password, avatar_url=None):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                result = await conn.fetchrow('''INSERT INTO users
-                                             (id, name, password, avatar_url)
-                                             VALUES (DEFAULT, $1, $2, $3)
-                                             RETURNING *''',
+                result = await conn.fetchrow('INSERT INTO users'
+                                             '(id, name, password, avatar_url)'
+                                             'VALUES (DEFAULT, $1, $2, $3)'
+                                             'RETURNING *',
                                              name, password, avatar_url)
                 user = User(**result)
                 ok = True
@@ -164,10 +164,10 @@ class EditUser(graphene.Mutation):
         update_columns = (', ').join(columns)
         update_index = (', ').join(index)
 
-        query_string = f'''UPDATE users
-                          SET ({update_columns}) = ROW ({update_index})
-                          WHERE id = $1
-                          RETURNING *'''
+        query_string = f'UPDATE users'\
+            f'SET ({update_columns}) = ROW ({update_index})'\
+            f'WHERE id = $1'\
+            f'RETURNING *'
 
         async with app.pool.acquire() as conn:
             async with conn.transaction():
@@ -189,9 +189,9 @@ class DeleteUser(graphene.Mutation):
     async def mutate(self, info, id):
         _, id = from_global_id(id)
 
-        query_string = '''DELETE FROM users
-                          WHERE id = $1
-                          RETURNING *'''
+        query_string = f'DELETE FROM users'\
+            f'WHERE id = $1'\
+            f'RETURNING *'
 
         async with app.pool.acquire() as conn:
             async with conn.transaction():
@@ -214,10 +214,10 @@ class AddMessage(graphene.Mutation):
         _, user_id = from_global_id(user_id)
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                result = await conn.fetchrow('''INSERT INTO messages
-                                             (id, datetime, message, user_id)
-                                             VALUES (DEFAULT, NOW(), $1, $2)
-                                             RETURNING *''',
+                result = await conn.fetchrow('INSERT INTO messages'
+                                             '(id, datetime, message, user_id)'
+                                             'VALUES (DEFAULT, NOW(), $1, $2)'
+                                             'RETURNING *',
                                              message, int(user_id))
                 message = Message(**result)
                 ok = True

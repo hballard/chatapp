@@ -1,18 +1,20 @@
 import React from 'react'
+
 import Grid from '@material-ui/core/Grid'
 import Avatar from '@material-ui/core/Avatar'
 import { withStyles } from '@material-ui/core/styles'
-import cyan from '@material-ui/core/colors/cyan'
+//import cyan from '@material-ui/core/colors/cyan'
 import green from '@material-ui/core/colors/green'
+
 import Image from './assets/images/Heath.png'
 
-const styles = {
+const styles = theme => ({
   bubble: {
     backgroundColor: green[100],
     padding: 5,
     borderRadius: 5,
   }
-}
+})
 
 const ChatBubble = ({classes}) => {
   return (

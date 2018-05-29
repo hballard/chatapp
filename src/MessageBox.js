@@ -1,50 +1,85 @@
 import React from 'react'
 import Grid from '@material-ui/core/Grid'
-import TextField from '@material-ui/core/TextField'
+import Input from '@material-ui/core/Input'
+import InputLabel from '@material-ui/core/InputLabel'
+import FormControl from '@material-ui/core/FormControl'
 import Button from '@material-ui/core/Button'
-//import Icon from '@material-ui/core/Icon'
+import teal from '@material-ui/core/colors/teal'
 import { withStyles } from '@material-ui/core/styles'
 
 const styles = theme => ({
-    container: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      },
+  container: {
+    display: 'flex',
+    justifyContent: 'center',
+    minHeight: 125
+  },
+  button: {
+    marginRight: '4em',
+    marginTop: 60,
+    backgroundColor: teal[500],
+    color: 'white'
+  },
+  formControl: {
+    marginTop: 30
+  },
+  cssLabel: {
+    '&$cssFocused': {
+      color: teal[500]
+    }
+  },
+  cssFocused: {},
+  cssUnderline: {
+    '&:after': {
+      borderBottomColor: teal[500]
+    },
+    '&:hover:not(.foo):not(.bar):not(.foobar):before': {
+      borderBottomColor: teal[500]
+    }
+  }
 })
 
 class ChatBubble extends React.Component {
-    state = {
-        message: ''
-    }
+  state = {
+    message: ''
+  }
 
-    handleChange = message => event => {
-        this.setState({
-      [message]: event.target.value,
+  handleChange = message => event => {
+    this.setState({
+      [message]: event.target.value
     })
-    }
+  }
 
-    render() {
-        const { classes } = this.props
-        return (
-            <form className={classes.container} noValidate autoComplete='off'>
-                <Grid item xs={3}>
-                    <Button variant="raised" color="primary">
-                        Primary
-                      </Button>
-                </Grid>
-                <Grid item xs={3}>
-                    <TextField
-                      id="message"
-                      label="Enter message"
-                      value={this.state.message}
-                      onChange={this.handleChange('message')}
-                      margin="normal"
-                    />
-                </Grid>
-            </form>
-        )
-    }
+  render() {
+    const { classes } = this.props
+    return (
+      <form className={classes.container} noValidate autoComplete="off">
+        <Grid item>
+          <Button variant="raised" className={classes.button}>
+            Send
+          </Button>
+        </Grid>
+        <Grid item>
+          <FormControl className={classes.formControl}>
+            <InputLabel
+              htmlFor="message"
+              FormLabelClasses={{
+                root: classes.cssLabel,
+                focused: classes.cssFocused
+              }}
+            >
+              Enter message
+            </InputLabel>
+            <Input
+              id="message"
+              value={this.state.message}
+              onChange={this.handleChange('message')}
+              classes={{ underline: classes.cssUnderline }}
+            />
+          </FormControl>
+        </Grid>
+      </form>
+    )
+  }
 }
 
 export default withStyles(styles)(ChatBubble)

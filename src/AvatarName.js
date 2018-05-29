@@ -1,28 +1,42 @@
 import React from 'react'
+import { withStyles } from '@material-ui/core/styles'
 import Grid from '@material-ui/core/Grid'
 import Avatar from '@material-ui/core/Avatar'
+import Typography from '@material-ui/core/Typography'
+
 import Image from './assets/images/Heath.png'
 
-
-const AvatarName = props => {
-  return (
-    <Grid
-      container
-      justify='center'
-      alignItems='center'
-    >
-      <Grid
-        item xs={1}
-        zeroMinWidth >
-        <Avatar
-          src={Image}
-        />
-      </Grid>
-      <Grid item xs={2} zeroMinWidth >
-        Heath Ballard
-      </Grid>
-    </Grid>
-  )
+const styles = {
+  root: {
+    padding: '1em'
+  },
+  avatar: {
+    marginRight: 10
+  }
 }
 
-export default AvatarName
+export default withStyles(styles)(
+  ({ classes, width, height, variant, backgroundColor, color, children }) => {
+    return (
+      <Grid
+        container
+        alignItems="center"
+        style={{ backgroundColor }}
+        className={classes.root}
+      >
+        <Grid item>
+          <Avatar
+            src={Image}
+            className={classes.avatar}
+            style={{ width, height }}
+          />
+        </Grid>
+        <Grid item>
+          <Typography variant={variant} style={{ color }}>
+            {children}
+          </Typography>
+        </Grid>
+      </Grid>
+    )
+  }
+)

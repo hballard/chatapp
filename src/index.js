@@ -11,12 +11,6 @@ const client = new ApolloClient({
   uri: 'http://localhost:5000/graphql'
 })
 
-//const theme = createMuiTheme({
-  //palette: {
-    //type: 'dark',
-  //},
-//})
-
 const ChatApp = () => (
   <ApolloProvider client={client}>
     <MuiThemeProvider theme={createMuiTheme()}>

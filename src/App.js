@@ -1,14 +1,15 @@
 import React from 'react'
-import CssBaseline from '@material-ui/core/CssBaseline'
-import { withStyles } from '@material-ui/core/styles'
 import Grid from '@material-ui/core/Grid'
 import Paper from '@material-ui/core/Paper'
 import Typography from '@material-ui/core/Typography'
+import CssBaseline from '@material-ui/core/CssBaseline'
 import teal from '@material-ui/core/colors/teal'
+import { withStyles } from '@material-ui/core/styles'
 
 import AvatarName from './AvatarName'
 import ChatSection from './ChatSection'
 import MessageBox from './MessageBox'
+import SignInModal from './SignInModal'
 
 const styles = {
   mainContainer: {
@@ -21,7 +22,7 @@ const styles = {
   },
   sideItem: {
     margin: 10,
-    minWidth: 275,
+    minWidth: 275
   },
   sidePaper: {
     minHeight: 250
@@ -38,7 +39,7 @@ export default withStyles(styles)(({ classes }) => {
     <React.Fragment>
       <CssBaseline />
       <Grid container justify="center" className={classes.mainContainer}>
-        <Grid item xs={5} className={classes.mainItem}>
+        <Grid item xs={6} className={classes.mainItem}>
           <Paper>
             <AvatarName
               width={60}
@@ -65,6 +66,7 @@ export default withStyles(styles)(({ classes }) => {
             <div />
           </Paper>
         </Grid>
+        <SignInModal />
       </Grid>
     </React.Fragment>
   )

@@ -1,7 +1,7 @@
 import React from 'react'
-import { withStyles } from '@material-ui/core/styles'
 import green from '@material-ui/core/colors/green'
 import grey from '@material-ui/core/colors/grey'
+import { withStyles } from '@material-ui/core/styles'
 
 import ChatBubble from './ChatBubble'
 

@@ -13,19 +13,14 @@ import SignInModal from './SignInModal'
 
 const styles = {
   mainContainer: {
-    minWidth: 300,
-    marginTop: 100
+    marginTop: 75
   },
   mainItem: {
     margin: 10,
     minWidth: 350
   },
   sideItem: {
-    margin: 10,
-    minWidth: 275
-  },
-  sidePaper: {
-    minHeight: 250
+    margin: 10
   },
   sideHeader: {
     backgroundColor: teal[500],
@@ -54,8 +49,8 @@ export default withStyles(styles)(({ classes }) => {
             <MessageBox />
           </Paper>
         </Grid>
-        <Grid item xs={2} className={classes.sideItem}>
-          <Paper className={classes.sidePaper}>
+        <Grid item className={classes.sideItem}>
+          <Paper>
             <div className={classes.sideHeader}>
               <Typography variant="display2" style={{ color: 'inherit' }}>
                 Chat Users

@@ -1,6 +1,6 @@
 import React from 'react'
-import Grid from '@material-ui/core/Grid'
 import Avatar from '@material-ui/core/Avatar'
+import Grid from '@material-ui/core/Grid'
 import cyan from '@material-ui/core/colors/cyan'
 import { withStyles } from '@material-ui/core/styles'
 

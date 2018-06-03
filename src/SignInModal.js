@@ -7,8 +7,8 @@ import InputLabel from '@material-ui/core/InputLabel'
 import Modal from '@material-ui/core/Modal'
 import Paper from '@material-ui/core/Paper'
 import Typography from '@material-ui/core/Typography'
-import { withStyles } from '@material-ui/core/styles'
 import teal from '@material-ui/core/colors/teal'
+import { withStyles } from '@material-ui/core/styles'
 
 const styles = theme => ({
   paper: {

@@ -10,7 +10,6 @@ pubsub = AsyncioPubsub()
 
 
 class User(graphene.ObjectType):
-
     class Meta:
         interfaces = (graphene.relay.Node, )
 
@@ -28,8 +27,7 @@ class User(graphene.ObjectType):
             async with conn.transaction():
                 result = await conn.fetch('SELECT *'
                                           'FROM messages'
-                                          'WHERE user_id = $1',
-                                          self.id)
+                                          'WHERE user_id = $1', self.id)
                 return [Message(**dict(record)) for record in result]
 
     @classmethod
@@ -38,19 +36,16 @@ class User(graphene.ObjectType):
             async with conn.transaction():
                 record = await conn.fetchrow('SELECT *'
                                              'FROM users'
-                                             'WHERE id = $1',
-                                             id)
+                                             'WHERE id = $1', id)
                 return User(**record)
 
 
 class Users(graphene.relay.Connection):
-
     class Meta:
         node = User
 
 
 class Message(graphene.ObjectType):
-
     class Meta:
         interfaces = (graphene.relay.Node, )
 
@@ -68,8 +63,7 @@ class Message(graphene.ObjectType):
             async with conn.transaction():
                 record = await conn.fetchrow('SELECT *'
                                              'FROM users'
-                                             'WHERE id = $1',
-                                             self.user_id)
+                                             'WHERE id = $1', self.user_id)
                 return User(**dict(record))
 
     @classmethod
@@ -78,13 +72,11 @@ class Message(graphene.ObjectType):
             async with conn.transaction():
                 record = await conn.fetchrow('SELECT *'
                                              'FROM messages'
-                                             'WHERE id = $1',
-                                             id)
+                                             'WHERE id = $1', id)
                 return Message(**dict(record))
 
 
 class Messages(graphene.relay.Connection):
-
     class Meta:
         node = Message
 
@@ -109,7 +101,6 @@ class Query(graphene.ObjectType):
 
 
 class AddUser(graphene.Mutation):
-
     class Arguments:
         name = graphene.String(required=True)
         password = graphene.String(required=True)
@@ -124,15 +115,15 @@ class AddUser(graphene.Mutation):
                 result = await conn.fetchrow('INSERT INTO users'
                                              '(id, name, password, avatar_url)'
                                              'VALUES (DEFAULT, $1, $2, $3)'
-                                             'RETURNING *',
-                                             name, password, avatar_url)
+                                             'RETURNING *', name, password,
+                                             avatar_url)
                 user = User(**result)
                 ok = True
+                await pubsub.publish('users', user)
                 return AddUser(user=user, ok=ok)
 
 
 class EditUser(graphene.Mutation):
-
     class Arguments:
         id = graphene.ID(required=True)
         name = graphene.String()
@@ -171,15 +162,13 @@ class EditUser(graphene.Mutation):
 
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                result = await conn.fetchrow(query_string,
-                                             int(id), *values)
+                result = await conn.fetchrow(query_string, int(id), *values)
                 user = User(**result)
                 ok = True
                 return EditUser(user=user, ok=ok)
 
 
 class DeleteUser(graphene.Mutation):
-
     class Arguments:
         id = graphene.ID(required=True)
 
@@ -202,7 +191,6 @@ class DeleteUser(graphene.Mutation):
 
 
 class AddMessage(graphene.Mutation):
-
     class Arguments:
         message = graphene.String(required=True)
         user_id = graphene.ID(required=True)
@@ -217,8 +205,8 @@ class AddMessage(graphene.Mutation):
                 result = await conn.fetchrow('INSERT INTO messages'
                                              '(id, datetime, message, user_id)'
                                              'VALUES (DEFAULT, NOW(), $1, $2)'
-                                             'RETURNING *',
-                                             message, int(user_id))
+                                             'RETURNING *', message,
+                                             int(user_id))
                 message = Message(**result)
                 ok = True
                 await pubsub.publish('messages', message)
@@ -236,6 +224,7 @@ class Mutation(graphene.ObjectType):
 class Subscription(graphene.ObjectType):
 
     message = graphene.Field(lambda: Message)
+    users = graphene.Field(lambda: Users)
 
     async def resolve_message(self, info):
         try:
@@ -246,6 +235,14 @@ class Subscription(graphene.ObjectType):
         except asyncio.CancelledError:
             pubsub.unsubscribe('messages', sub_id)
 
+    async def resolve_users(self, info):
+        try:
+            sub_id, q = pubsub.subscribe_to_channel('users')
+            while True:
+                payload = await q.get()
+                yield payload
+        except asyncio.CancelledError:
+            pubsub.unsubscribe('users', sub_id)
 
-schema = graphene.Schema(query=Query, mutation=Mutation,
-                         subscription=Subscription)
+schema = graphene.Schema(
+    query=Query, mutation=Mutation, subscription=Subscription)

@@ -5,11 +5,12 @@ import Typography from '@material-ui/core/Typography'
 import CssBaseline from '@material-ui/core/CssBaseline'
 import teal from '@material-ui/core/colors/teal'
 import { withStyles } from '@material-ui/core/styles'
+import './styles/App.css'
 
-import AvatarName from './AvatarName'
-import ChatSection from './ChatSection'
-import MessageBox from './MessageBox'
-import SignInModal from './SignInModal'
+import AvatarName from './components/AvatarName'
+import ChatSection from './components/ChatSection'
+import MessageBox from './components/MessageBox'
+import SignInModal from './components/SignInModal'
 
 const styles = {
   mainContainer: {

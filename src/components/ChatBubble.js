@@ -4,7 +4,7 @@ import Grid from '@material-ui/core/Grid'
 import cyan from '@material-ui/core/colors/cyan'
 import { withStyles } from '@material-ui/core/styles'
 
-import Image from './assets/images/Heath.png'
+import Image from '../assets/images/Heath.png'
 
 const styles = theme => ({
   root: {

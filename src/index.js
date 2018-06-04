@@ -3,7 +3,6 @@ import { render } from 'react-dom'
 import ApolloClient from 'apollo-boost'
 import { ApolloProvider } from 'react-apollo'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
-import './assets/styles/App.css'
 
 import App from './App.js'
 

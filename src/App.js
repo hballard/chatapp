@@ -1,4 +1,7 @@
 import React from 'react'
+import gql from 'graphql-tag'
+import { Query } from 'react-apollo'
+import CircularProgress from '@material-ui/core/CircularProgress'
 import Grid from '@material-ui/core/Grid'
 import Paper from '@material-ui/core/Paper'
 import Typography from '@material-ui/core/Typography'
@@ -30,6 +33,20 @@ const styles = {
   }
 }
 
+const GET_USERS = gql`
+  query getUsers {
+    users {
+      edges {
+        node {
+          id
+          name
+          status
+        }
+      }
+    }
+  }
+`
+
 export default withStyles(styles)(({ classes }) => {
   return (
     <React.Fragment>
@@ -57,9 +74,23 @@ export default withStyles(styles)(({ classes }) => {
                 Chat Users
               </Typography>
             </div>
-            <AvatarName>Heath Ballard (me)</AvatarName>
-            <AvatarName>Casey Ballard</AvatarName>
-            <div />
+            <Query query={GET_USERS}>
+              {({ loading, error, data: { users } }) => {
+                if (loading) return <CircularProgress />
+                if (error) return `Error! ${error.message}`
+                return (
+                  <div>
+                    {users.edges.map(item => {
+                      return (
+                        <AvatarName key={item.node.id}>
+                          {item.node.name}
+                        </AvatarName>
+                      )
+                    })}
+                  </div>
+                )
+              }}
+            </Query>
           </Paper>
         </Grid>
         <SignInModal />

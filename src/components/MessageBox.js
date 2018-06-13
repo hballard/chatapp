@@ -2,6 +2,7 @@ import React from 'react'
 import Button from '@material-ui/core/Button'
 import FormControl from '@material-ui/core/FormControl'
 import Grid from '@material-ui/core/Grid'
+import Icon from '@material-ui/core/Icon'
 import Input from '@material-ui/core/Input'
 import InputLabel from '@material-ui/core/InputLabel'
 import teal from '@material-ui/core/colors/teal'
@@ -19,8 +20,11 @@ const styles = theme => ({
     backgroundColor: teal[500],
     color: 'white'
   },
+  rightIcon: {
+    marginLeft: theme.spacing.unit
+  },
   formControl: {
-    marginTop: 30
+    marginTop: theme.spacing.unit*3
   },
   cssLabel: {
     '&$cssFocused': {
@@ -54,8 +58,9 @@ class ChatBubble extends React.Component {
     return (
       <form className={classes.container} noValidate autoComplete="off">
         <Grid item>
-          <Button variant="raised" className={classes.button}>
+          <Button className={classes.button}>
             Send
+             <Icon className={classes.rightIcon}>send</Icon>
           </Button>
         </Grid>
         <Grid item>

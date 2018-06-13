@@ -17,6 +17,7 @@ class User(graphene.ObjectType):
     name = graphene.String()
     password = graphene.String()
     avatar_url = graphene.String()
+    status = graphene.Boolean()
     messages = graphene.List(lambda: Message)
 
     async def resolve_id(self, info):
@@ -103,13 +104,13 @@ class Query(graphene.ObjectType):
 class AddUser(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
-        password = graphene.String(required=True)
+        password = graphene.String()
         avatar_url = graphene.String()
 
     ok = graphene.Boolean()
     user = graphene.Field(lambda: User)
 
-    async def mutate(self, info, name, password, avatar_url=None):
+    async def mutate(self, info, name, password=None, avatar_url=None):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
                 result = await conn.fetchrow('INSERT INTO users'
@@ -129,6 +130,7 @@ class EditUser(graphene.Mutation):
         name = graphene.String()
         password = graphene.String()
         avatar_url = graphene.String()
+        status = graphene.String()
 
     ok = graphene.Boolean()
     user = graphene.Field(lambda: User)
@@ -243,6 +245,7 @@ class Subscription(graphene.ObjectType):
                 yield payload
         except asyncio.CancelledError:
             pubsub.unsubscribe('users', sub_id)
+
 
 schema = graphene.Schema(
     query=Query, mutation=Mutation, subscription=Subscription)

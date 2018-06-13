@@ -1,4 +1,6 @@
 import React from 'react'
+import gql from 'graphql-tag'
+import { Mutation } from 'react-apollo'
 import Button from '@material-ui/core/Button'
 import FormControl from '@material-ui/core/FormControl'
 import Grid from '@material-ui/core/Grid'
@@ -37,13 +39,41 @@ const styles = theme => ({
   }
 })
 
+const ADD_USER = gql`
+  mutation addUser($name: String!) {
+    addUser(name: $name) {
+      ok
+      user {
+        id
+        name
+        status
+      }
+    }
+  }
+`
+
+const GET_USERS = gql`
+  query getUsers {
+    users {
+      edges {
+        node {
+          id
+          name
+          status
+        }
+      }
+    }
+  }
+`
+
 class SignInModal extends React.Component {
   state = {
     open: true,
     inputField: ''
   }
 
-  handleClose = () => {
+  handleSubmit = addUser => () => {
+    addUser({ variables: { name: this.state.inputField } })
     this.setState({ open: false })
   }
 
@@ -61,31 +91,59 @@ class SignInModal extends React.Component {
         <Grid container justify={'center'} alignItems={'center'}>
           <Grid item>
             <Paper className={classes.paper}>
-              <Typography variant="title">Enter your chat name</Typography>
-              <Button
-                variant="raised"
-                className={classes.button}
-                onClick={this.handleClose}
+              <Mutation
+                mutation={ADD_USER}
+                update={(cache, { data: { addUser } }) => {
+                  const { users } = cache.readQuery({ query: GET_USERS })
+                  const newUser = {
+                    node: { ...addUser.user, __typename: 'User' },
+                    __typename: 'UsersEdge'
+                  }
+                  cache.writeQuery({
+                    query: GET_USERS,
+                    data: {
+                      users: {
+                        edges: [...users.edges, newUser],
+                        __typename: 'UsersConnection'
+                      }
+                    }
+                  })
+                }}
               >
-                Submit
-              </Button>
-              <FormControl className={classes.formControl}>
-                <InputLabel
-                  htmlFor="enter-name"
-                  FormLabelClasses={{
-                    root: classes.cssLabel,
-                    focused: classes.cssFocused
-                  }}
-                >
-                  Enter name
-                </InputLabel>
-                <Input
-                  id="enter-name"
-                  value={this.state.inputField}
-                  onChange={this.handleChange}
-                  classes={{ underline: classes.cssUnderline }}
-                />
-              </FormControl>
+                {addUser => {
+                  return (
+                    <React.Fragment>
+                      <Typography variant="title">
+                        Enter your chat name
+                      </Typography>
+                      <Button
+                        variant="raised"
+                        className={classes.button}
+                        onClick={this.handleSubmit(addUser)}
+                      >
+                        Submit
+                      </Button>
+                      <FormControl className={classes.formControl}>
+                        <InputLabel
+                          htmlFor="enter-name"
+                          FormLabelClasses={{
+                            root: classes.cssLabel,
+                            focused: classes.cssFocused
+                          }}
+                        >
+                          Enter name
+                        </InputLabel>
+                        <Input
+                          id="enter-name"
+                          value={this.state.inputField}
+                          onChange={this.handleChange}
+                          classes={{ underline: classes.cssUnderline }}
+                        />
+                      </FormControl>
+                    </React.Fragment>
+                  )
+                }}
+              </Mutation>
             </Paper>
           </Grid>
         </Grid>

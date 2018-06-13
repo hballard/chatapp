@@ -14,7 +14,8 @@ users_table = """CREATE TABLE IF NOT EXISTS users (
                  id serial PRIMARY KEY,
                  name text,
                  password text,
-                 avatar_url text
+                 avatar_url text,
+                 status boolean DEFAULT TRUE
               );"""
 
 messages_table = """CREATE TABLE IF NOT EXISTS messages (

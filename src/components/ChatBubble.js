@@ -18,21 +18,22 @@ const styles = theme => ({
   }
 })
 
-export default withStyles(styles)(({ classes, background, marginLeft }) => {
-  return (
-    <Grid
-      container
-      justify="center"
-      style={{ marginLeft }}
-      className={classes.root}
-    >
-      <Grid item xs={1} zeroMinWidth>
-        <Avatar src={Image} className={classes.avatar} />
+export default withStyles(styles)(
+  ({ children, classes, background, marginLeft }) => {
+    return (
+      <Grid
+        container
+        justify="center"
+        style={{ marginLeft }}
+        className={classes.root}
+      >
+        <Grid item xs={1} zeroMinWidth>
+          <Avatar src={Image} className={classes.avatar} />
+        </Grid>
+        <Grid item xs={4} className={classes.bubble} style={{ background }}>
+          {children}
+        </Grid>
       </Grid>
-      <Grid item xs={4} className={classes.bubble} style={{ background }}>
-        Nullam adipiscing eros sit amet ante. Vestibulum ante. Sed quis ipsum
-        non ligula
-      </Grid>
-    </Grid>
-  )
-})
+    )
+  }
+)

@@ -1,7 +1,6 @@
 import asyncio
 import graphene
 from graphene.types.datetime import DateTime
-from graphql_relay import to_global_id, from_global_id
 from graphql_ws.pubsub import AsyncioPubsub
 
 from . import app
@@ -19,9 +18,6 @@ class User(graphene.ObjectType):
     avatar_url = graphene.String()
     status = graphene.Boolean()
     messages = graphene.List(lambda: Message)
-
-    async def resolve_id(self, info):
-        return to_global_id('User', self.id)
 
     async def resolve_messages(self, info):
         async with app.pool.acquire() as conn:
@@ -53,11 +49,8 @@ class Message(graphene.ObjectType):
     id = graphene.ID(required=True)
     datetime = DateTime()
     message = graphene.String()
-    user_id = graphene.Int()
+    user_id = graphene.ID()
     user = graphene.Field(lambda: User)
-
-    async def resolve_id(self, info):
-        return to_global_id('Message', self.id)
 
     async def resolve_user(self, info):
         async with app.pool.acquire() as conn:
@@ -92,7 +85,8 @@ class Query(graphene.ObjectType):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
                 result = await conn.fetch('SELECT * FROM users')
-                return [User(**dict(record)) for record in result]
+                return [User(**dict(record)) for record in result if
+                        record['status'] is True]
 
     async def resolve_messages(self, info, **args):
         async with app.pool.acquire() as conn:
@@ -136,7 +130,7 @@ class EditUser(graphene.Mutation):
     user = graphene.Field(lambda: User)
 
     async def mutate(self, info, **kwargs):
-        _, id = from_global_id(kwargs['id'])
+        id = kwargs['id']
         del kwargs['id']
 
         i = 2
@@ -178,7 +172,6 @@ class DeleteUser(graphene.Mutation):
     user = graphene.Field(lambda: User)
 
     async def mutate(self, info, id):
-        _, id = from_global_id(id)
 
         query_string = f'DELETE FROM users'\
             f'WHERE id = $1'\
@@ -201,7 +194,6 @@ class AddMessage(graphene.Mutation):
     message = graphene.Field(lambda: Message)
 
     async def mutate(self, info, message, user_id):
-        _, user_id = from_global_id(user_id)
         async with app.pool.acquire() as conn:
             async with conn.transaction():
                 result = await conn.fetchrow('INSERT INTO messages'

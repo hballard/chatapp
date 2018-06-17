@@ -99,6 +99,7 @@ class SignInModal extends React.Component {
                     node: { ...addUser.user, __typename: 'User' },
                     __typename: 'UsersEdge'
                   }
+                  cache.writeData({ data: { localUser: addUser.user.id } })
                   cache.writeQuery({
                     query: GET_USERS,
                     data: {

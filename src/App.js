@@ -74,22 +74,34 @@ export default withStyles(styles)(({ classes }) => {
                 Chat Users
               </Typography>
             </div>
-            <Query query={GET_USERS}>
-              {({ loading, error, data: { users } }) => {
-                if (loading) return <CircularProgress />
-                if (error) return `Error! ${error.message}`
-                return (
-                  <div>
-                    {users.edges.map(item => {
-                      return (
-                        <AvatarName key={item.node.id}>
-                          {item.node.name}
-                        </AvatarName>
-                      )
-                    })}
-                  </div>
-                )
-              }}
+            <Query
+              query={gql`
+                {
+                  localUser @client
+                }
+              `}
+            >
+              {({ data: { localUser } }) => (
+                <Query query={GET_USERS} pollInterval={3000}>
+                  {({ loading, error, data: { users } }) => {
+                    if (loading) return <CircularProgress />
+                    if (error) return `Error! ${error.message}`
+                    return (
+                      <div>
+                        {users.edges.map(item => {
+                          return (
+                            <AvatarName key={item.node.id}>
+                              {item.node.id === localUser
+                                ? item.node.name + ' (me)'
+                                : item.node.name}
+                            </AvatarName>
+                          )
+                        })}
+                      </div>
+                    )
+                  }}
+                </Query>
+              )}
             </Query>
           </Paper>
         </Grid>

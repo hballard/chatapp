@@ -1,4 +1,6 @@
 import React from 'react'
+import { Query, Mutation } from 'react-apollo'
+import gql from 'graphql-tag'
 import Button from '@material-ui/core/Button'
 import FormControl from '@material-ui/core/FormControl'
 import Grid from '@material-ui/core/Grid'
@@ -24,7 +26,7 @@ const styles = theme => ({
     marginLeft: theme.spacing.unit
   },
   formControl: {
-    marginTop: theme.spacing.unit*3
+    marginTop: theme.spacing.unit * 3
   },
   cssLabel: {
     '&$cssFocused': {
@@ -42,9 +44,47 @@ const styles = theme => ({
   }
 })
 
+const ADD_MSG = gql`
+  mutation addMessage($message: String!, $userId: ID!) {
+    addMessage(message: $message, userId: $userId) {
+      ok
+      message {
+        id
+        message
+        datetime
+        userId
+      }
+    }
+  }
+`
+const GET_MSGS = gql`
+  query getMessages {
+    messages {
+      edges {
+        node {
+          id
+          datetime
+          message
+          userId
+        }
+      }
+    }
+  }
+`
+
 class ChatBubble extends React.Component {
   state = {
     message: ''
+  }
+
+  handleSubmit = (addMessage, localUser) => () => {
+    addMessage({
+      variables: {
+        message: this.state.message,
+        userId: localUser
+      }
+    })
+    this.setState({ message: '' })
   }
 
   handleChange = message => event => {
@@ -56,33 +96,68 @@ class ChatBubble extends React.Component {
   render() {
     const { classes } = this.props
     return (
-      <form className={classes.container} noValidate autoComplete="off">
-        <Grid item>
-          <Button className={classes.button}>
-            Send
-             <Icon className={classes.rightIcon}>send</Icon>
-          </Button>
-        </Grid>
-        <Grid item>
-          <FormControl className={classes.formControl}>
-            <InputLabel
-              htmlFor="message"
-              FormLabelClasses={{
-                root: classes.cssLabel,
-                focused: classes.cssFocused
-              }}
-            >
-              Enter message
-            </InputLabel>
-            <Input
-              id="message"
-              value={this.state.message}
-              onChange={this.handleChange('message')}
-              classes={{ underline: classes.cssUnderline }}
-            />
-          </FormControl>
-        </Grid>
-      </form>
+      <Query
+        query={gql`
+          {
+            localUser @client
+          }
+        `}
+      >
+        {({ data: { localUser } }) => (
+          <Mutation
+            mutation={ADD_MSG}
+            update={(cache, { data: { addMessage } }) => {
+              const { messages } = cache.readQuery({ query: GET_MSGS })
+              const newMsg = {
+                node: { ...addMessage.message, __typename: 'Message' },
+                __typename: 'MessagesEdge'
+              }
+              cache.writeQuery({
+                query: GET_MSGS,
+                data: {
+                  messages: {
+                    edges: [...messages.edges, newMsg],
+                    __typename: 'MessagesConnection'
+                  }
+                }
+              })
+            }}
+          >
+            {addMessage => (
+              <form className={classes.container} noValidate autoComplete="off">
+                <Grid item>
+                  <Button
+                    className={classes.button}
+                    onClick={this.handleSubmit(addMessage, localUser)}
+                  >
+                    Send
+                    <Icon className={classes.rightIcon}>send</Icon>
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <FormControl className={classes.formControl}>
+                    <InputLabel
+                      htmlFor="message"
+                      FormLabelClasses={{
+                        root: classes.cssLabel,
+                        focused: classes.cssFocused
+                      }}
+                    >
+                      Enter message
+                    </InputLabel>
+                    <Input
+                      id="message"
+                      value={this.state.message}
+                      onChange={this.handleChange('message')}
+                      classes={{ underline: classes.cssUnderline }}
+                    />
+                  </FormControl>
+                </Grid>
+              </form>
+            )}
+          </Mutation>
+        )}
+      </Query>
     )
   }
 }

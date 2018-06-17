@@ -9,6 +9,7 @@ graphene = "*"
 asyncpg = "*"
 "iso8601" = "*"
 Sanic-GraphQL = "*"
+graphql-core = "==2.1rc2"
 
 [dev-packages]
 neovim = "*"

@@ -9,10 +9,13 @@ graphene = "*"
 asyncpg = "*"
 "iso8601" = "*"
 Sanic-GraphQL = "*"
-graphql-core = "==2.1rc2"
+graphql-core = ">=2.1rc0"
 
 [dev-packages]
 neovim = "*"
 "flake8" = "*"
 yapf = "*"
 ipdb = "*"
+
+[pipenv]
+allow_prereleases = true

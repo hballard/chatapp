@@ -41,7 +41,7 @@ export default withStyles(styles)(({ classes }) => {
       `}
     >
       {({ data: { localUser } }) => (
-        <Query query={GET_MSGS} pollInterval={3000}>
+        <Query query={GET_MSGS} pollInterval={10000}>
           {({ loading, error, data: { messages } }) => {
             if (loading) return '...'
             if (error) return `Error! ${error.message}`

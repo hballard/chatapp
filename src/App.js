@@ -82,7 +82,7 @@ export default withStyles(styles)(({ classes }) => {
               `}
             >
               {({ data: { localUser } }) => (
-                <Query query={GET_USERS} pollInterval={3000}>
+                <Query query={GET_USERS} pollInterval={10000}>
                   {({ loading, error, data: { users } }) => {
                     if (loading) return <CircularProgress />
                     if (error) return `Error! ${error.message}`

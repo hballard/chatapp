@@ -87,9 +87,9 @@ class ChatBubble extends React.Component {
     this.setState({ message: '' })
   }
 
-  handleChange = message => event => {
+  handleChange = event => {
     this.setState({
-      [message]: event.target.value
+      message: event.target.value
     })
   }
 
@@ -148,7 +148,7 @@ class ChatBubble extends React.Component {
                     <Input
                       id="message"
                       value={this.state.message}
-                      onChange={this.handleChange('message')}
+                      onChange={this.handleChange}
                       classes={{ underline: classes.cssUnderline }}
                     />
                   </FormControl>

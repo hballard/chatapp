@@ -98,7 +98,7 @@ class ChatBubble extends React.Component {
     return (
       <Query
         query={gql`
-          {
+          query messageBoxClientState {
             localUser @client
           }
         `}

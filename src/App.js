@@ -76,7 +76,7 @@ export default withStyles(styles)(({ classes }) => {
             </div>
             <Query
               query={gql`
-                {
+                query appClientState {
                   localUser @client
                 }
               `}

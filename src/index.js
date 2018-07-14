@@ -11,6 +11,7 @@ import { getMainDefinition } from 'apollo-utilities'
 import { onError } from 'apollo-link-error'
 import { split } from 'apollo-link'
 import { withClientState } from 'apollo-link-state'
+import * as uuidv4 from 'uuid/v4'
 
 import App from './App.js'
 
@@ -51,7 +52,8 @@ const client = new ApolloClient({
     withClientState({
       cache,
       defaults: {
-        localUser: ''
+        localUser: '',
+        sessionId: uuidv4()
       },
       resolvers: {},
       typeDefs: `

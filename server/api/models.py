@@ -13,6 +13,7 @@ DB_CONFIG = {
 users_table = """CREATE TABLE IF NOT EXISTS users (
                  id serial PRIMARY KEY,
                  name text,
+                 session_id text,
                  password text,
                  avatar_url text,
                  status boolean DEFAULT TRUE

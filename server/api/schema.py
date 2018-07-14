@@ -14,6 +14,7 @@ class User(graphene.ObjectType):
 
     id = graphene.ID(required=True)
     name = graphene.String()
+    session_id = graphene.String()
     password = graphene.String()
     avatar_url = graphene.String()
     status = graphene.Boolean()
@@ -84,7 +85,9 @@ class Query(graphene.ObjectType):
     async def resolve_users(self, info, **args):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                result = await conn.fetch('SELECT * FROM users')
+                result = await conn.fetch('SELECT *'
+                                          'FROM users '
+                                          'WHERE status = TRUE')
                 return [User(**dict(record)) for record in result if
                         record['status'] is True]
 
@@ -98,20 +101,23 @@ class Query(graphene.ObjectType):
 class AddUser(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
+        session_id = graphene.String(required=True)
         password = graphene.String()
         avatar_url = graphene.String()
 
     ok = graphene.Boolean()
     user = graphene.Field(lambda: User)
 
-    async def mutate(self, info, name, password=None, avatar_url=None):
+    async def mutate(self, info, name, session_id, password=None,
+                     avatar_url=None):
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                result = await conn.fetchrow('INSERT INTO users'
-                                             '(id, name, password, avatar_url)'
-                                             'VALUES (DEFAULT, $1, $2, $3)'
-                                             'RETURNING *', name, password,
-                                             avatar_url)
+                result = await conn.fetchrow('INSERT INTO users '
+                                             '(id, name, session_id, '
+                                             'password, avatar_url) '
+                                             'VALUES (DEFAULT, $1, $2, $3, $4) '
+                                             'RETURNING *', name, session_id,
+                                             password, avatar_url)
                 user = User(**result)
                 ok = True
                 await pubsub.publish('users', user)
@@ -122,6 +128,7 @@ class EditUser(graphene.Mutation):
     class Arguments:
         id = graphene.ID(required=True)
         name = graphene.String()
+        session_id = graphene.String()
         password = graphene.String()
         avatar_url = graphene.String()
         status = graphene.String()
@@ -166,22 +173,22 @@ class EditUser(graphene.Mutation):
 
 class DeleteUser(graphene.Mutation):
     class Arguments:
-        id = graphene.ID(required=True)
+        session_id = graphene.String(required=True)
 
     ok = graphene.Boolean()
     user = graphene.Field(lambda: User)
 
-    async def mutate(self, info, id):
-
-        query_string = f'DELETE FROM users'\
-            f'WHERE id = $1'\
-            f'RETURNING *'
+    async def mutate(self, info, session_id):
 
         async with app.pool.acquire() as conn:
             async with conn.transaction():
-                result = await conn.fetchrow(query_string, int(id))
+                result = await conn.fetchrow('UPDATE users '
+                                             'SET status = FALSE '
+                                             'WHERE session_id = $1 '
+                                             'RETURNING *', session_id)
                 user = User(**result)
                 ok = True
+                await pubsub.publish('users', user)
                 return DeleteUser(user=user, ok=ok)
 
 
@@ -218,7 +225,7 @@ class Mutation(graphene.ObjectType):
 class Subscription(graphene.ObjectType):
 
     message = graphene.Field(lambda: Message)
-    users = graphene.Field(lambda: Users)
+    user = graphene.Field(lambda: User)
 
     async def resolve_message(self, info):
         try:
@@ -229,7 +236,7 @@ class Subscription(graphene.ObjectType):
         except asyncio.CancelledError:
             pubsub.unsubscribe('messages', sub_id)
 
-    async def resolve_users(self, info):
+    async def resolve_user(self, info):
         try:
             sub_id, q = pubsub.subscribe_to_channel('users')
             while True:

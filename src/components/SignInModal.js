@@ -1,6 +1,6 @@
 import React from 'react'
 import gql from 'graphql-tag'
-import { Mutation } from 'react-apollo'
+import { Mutation, Query } from 'react-apollo'
 import Button from '@material-ui/core/Button'
 import FormControl from '@material-ui/core/FormControl'
 import Grid from '@material-ui/core/Grid'
@@ -40,12 +40,13 @@ const styles = theme => ({
 })
 
 const ADD_USER = gql`
-  mutation addUser($name: String!) {
-    addUser(name: $name) {
+  mutation addUser($name: String!, $sessionId: String!) {
+    addUser(name: $name, sessionId: $sessionId) {
       ok
       user {
         id
         name
+        sessionId
         status
       }
     }
@@ -59,6 +60,7 @@ const GET_USERS = gql`
         node {
           id
           name
+          sessionId
           status
         }
       }
@@ -72,8 +74,10 @@ class SignInModal extends React.Component {
     inputField: ''
   }
 
-  handleSubmit = addUser => () => {
-    addUser({ variables: { name: this.state.inputField } })
+  handleSubmit = (addUser, sessionId) => () => {
+    addUser({
+      variables: { name: this.state.inputField, sessionId: sessionId }
+    })
     this.setState({ open: false })
   }
 
@@ -113,35 +117,45 @@ class SignInModal extends React.Component {
               >
                 {addUser => {
                   return (
-                    <React.Fragment>
-                      <Typography variant="title">
-                        Enter your chat name
-                      </Typography>
-                      <Button
-                        variant="raised"
-                        className={classes.button}
-                        onClick={this.handleSubmit(addUser)}
-                      >
-                        Submit
-                      </Button>
-                      <FormControl className={classes.formControl}>
-                        <InputLabel
-                          htmlFor="enter-name"
-                          FormLabelClasses={{
-                            root: classes.cssLabel,
-                            focused: classes.cssFocused
-                          }}
-                        >
-                          Enter name
-                        </InputLabel>
-                        <Input
-                          id="enter-name"
-                          value={this.state.inputField}
-                          onChange={this.handleChange}
-                          classes={{ underline: classes.cssUnderline }}
-                        />
-                      </FormControl>
-                    </React.Fragment>
+                    <Query
+                      query={gql`
+                        query sessionIdState {
+                          sessionId @client
+                        }
+                      `}
+                    >
+                      {({ data: { sessionId } }) => (
+                        <React.Fragment>
+                          <Typography variant="title">
+                            Enter your chat name
+                          </Typography>
+                          <Button
+                            variant="raised"
+                            className={classes.button}
+                            onClick={this.handleSubmit(addUser, sessionId)}
+                          >
+                            Submit
+                          </Button>
+                          <FormControl className={classes.formControl}>
+                            <InputLabel
+                              htmlFor="enter-name"
+                              FormLabelClasses={{
+                                root: classes.cssLabel,
+                                focused: classes.cssFocused
+                              }}
+                            >
+                              Enter name
+                            </InputLabel>
+                            <Input
+                              id="enter-name"
+                              value={this.state.inputField}
+                              onChange={this.handleChange}
+                              classes={{ underline: classes.cssUnderline }}
+                            />
+                          </FormControl>
+                        </React.Fragment>
+                      )}
+                    </Query>
                   )
                 }}
               </Mutation>

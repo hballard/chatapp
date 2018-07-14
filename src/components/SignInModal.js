@@ -11,7 +11,7 @@ import Typography from '@material-ui/core/Typography'
 import teal from '@material-ui/core/colors/teal'
 import { withStyles } from '@material-ui/core/styles'
 
-import { GET_USERS, ADD_USER, GET_CLIENT_SESSION_ID } from '../graphql'
+import { ADD_USER, GET_CLIENT_SESSION_ID } from '../graphql'
 
 const styles = theme => ({
   paper: {
@@ -70,21 +70,7 @@ class SignInModal extends React.Component {
               <Mutation
                 mutation={ADD_USER}
                 update={(cache, { data: { addUser } }) => {
-                  const { users } = cache.readQuery({ query: GET_USERS })
-                  const newUser = {
-                    node: { ...addUser.user, __typename: 'User' },
-                    __typename: 'UsersEdge'
-                  }
                   cache.writeData({ data: { localUser: addUser.user.id } })
-                  cache.writeQuery({
-                    query: GET_USERS,
-                    data: {
-                      users: {
-                        edges: [...users.edges, newUser],
-                        __typename: 'UsersConnection'
-                      }
-                    }
-                  })
                 }}
               >
                 {addUser => {

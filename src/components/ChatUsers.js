@@ -15,11 +15,6 @@ class ChatUsers extends React.Component {
       updateQuery: (prev, { subscriptionData }) => {
         if (!subscriptionData.data) return prev
         const user = subscriptionData.data.user
-        if (
-          this.props.localUser === '' &&
-          this.props.sessionId === user.sessionId
-        )
-          return prev
         if (user.status === true) {
           const newUserNode = {
             node: { ...user, __typename: 'User' },

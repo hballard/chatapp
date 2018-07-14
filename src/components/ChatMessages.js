@@ -11,7 +11,6 @@ class ChatMessages extends React.Component {
       updateQuery: (prev, { subscriptionData }) => {
         if (!subscriptionData.data) return prev
         const newMsg = subscriptionData.data
-        if (newMsg.message.userId === this.props.localUser) return prev
         const newMsgNode = {
           node: { ...newMsg.message, __typename: 'Message' },
           __typename: 'MessagesEdge'

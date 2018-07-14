@@ -9,7 +9,7 @@ import InputLabel from '@material-ui/core/InputLabel'
 import teal from '@material-ui/core/colors/teal'
 import { withStyles } from '@material-ui/core/styles'
 
-import { ADD_MSG, GET_MSGS, GET_CLIENT_LOCALUSER } from '../graphql'
+import { ADD_MSG, GET_CLIENT_LOCALUSER } from '../graphql'
 
 const styles = theme => ({
   container: {
@@ -71,25 +71,7 @@ class ChatBubble extends React.Component {
     return (
       <Query query={GET_CLIENT_LOCALUSER}>
         {({ data: { localUser } }) => (
-          <Mutation
-            mutation={ADD_MSG}
-            update={(cache, { data: { addMessage } }) => {
-              const { messages } = cache.readQuery({ query: GET_MSGS })
-              const newMsg = {
-                node: { ...addMessage.message, __typename: 'Message' },
-                __typename: 'MessagesEdge'
-              }
-              cache.writeQuery({
-                query: GET_MSGS,
-                data: {
-                  messages: {
-                    edges: [...messages.edges, newMsg],
-                    __typename: 'MessagesConnection'
-                  }
-                }
-              })
-            }}
-          >
+          <Mutation mutation={ADD_MSG}>
             {addMessage => (
               <form className={classes.container} noValidate autoComplete="off">
                 <Grid item>

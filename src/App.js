@@ -1,5 +1,4 @@
 import React from 'react'
-import gql from 'graphql-tag'
 import { Query, Mutation } from 'react-apollo'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Grid from '@material-ui/core/Grid'
@@ -8,12 +7,14 @@ import Typography from '@material-ui/core/Typography'
 import CssBaseline from '@material-ui/core/CssBaseline'
 import teal from '@material-ui/core/colors/teal'
 import { withStyles } from '@material-ui/core/styles'
-import './styles/App.css'
 
+import './styles/App.css'
 import AvatarName from './components/AvatarName'
 import ChatSection from './components/ChatSection'
+import ChatUsers from './components/ChatUsers'
 import MessageBox from './components/MessageBox'
 import SignInModal from './components/SignInModal'
+import { GET_USERS, DELETE_USER, GET_CLIENT_STATE } from './graphql'
 
 const styles = {
   mainContainer: {
@@ -30,102 +31,6 @@ const styles = {
     backgroundColor: teal[500],
     padding: '1.3em',
     color: 'white'
-  }
-}
-
-const GET_USERS = gql`
-  query getUsers {
-    users {
-      edges {
-        node {
-          id
-          name
-          sessionId
-          status
-        }
-      }
-    }
-  }
-`
-
-const USER_SUBSCRIPTION = gql`
-  subscription newUser {
-    user {
-      id
-      name
-      sessionId
-      status
-    }
-  }
-`
-
-const DELETE_USER = gql`
-  mutation deleteUser($sessionId: String!) {
-    deleteUser(sessionId: $sessionId) {
-      ok
-    }
-  }
-`
-
-class ChatUsers extends React.Component {
-  handleWindowClose = e => {
-    this.props.deleteUser({ variables: { sessionId: this.props.sessionId } })
-  }
-
-  componentDidMount() {
-    window.addEventListener('beforeunload', this.handleWindowClose)
-    this.props.subscribeToMore({
-      document: USER_SUBSCRIPTION,
-      updateQuery: (prev, { subscriptionData }) => {
-        if (!subscriptionData.data) return prev
-        const user = subscriptionData.data.user
-        if (
-          this.props.localUser === '' &&
-          this.props.sessionId === user.sessionId
-        )
-          return prev
-        if (user.status === true) {
-          const newUserNode = {
-            node: { ...user, __typename: 'User' },
-            __typename: 'UsersEdge'
-          }
-          return {
-            users: {
-              edges: [...prev.users.edges, newUserNode],
-              __typename: 'UsersConnection'
-            }
-          }
-        } else {
-          return {
-            users: {
-              edges: prev.users.edges.filter(i => i.node.id !== user.id),
-              __typename: 'UsersConnection'
-            }
-          }
-        }
-      }
-    })
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('beforeunload', this.handleWindowClose)
-  }
-
-  render() {
-    const { users, localUser } = this.props
-    return (
-      <div>
-        {users.edges.map(item => {
-          return (
-            <AvatarName key={item.node.id}>
-              {item.node.id === localUser
-                ? item.node.name + ' (me)'
-                : item.node.name}
-            </AvatarName>
-          )
-        })}
-      </div>
-    )
   }
 }
 
@@ -164,14 +69,7 @@ export default withStyles(styles)(({ classes }) => {
                       if (loading) return <CircularProgress />
                       if (error) return `Error! ${error.message}`
                       return (
-                        <Query
-                          query={gql`
-                            query appClientState {
-                              localUser @client
-                              sessionId @client
-                            }
-                          `}
-                        >
+                        <Query query={GET_CLIENT_STATE}>
                           {({ data: { localUser, sessionId } }) => (
                             <ChatUsers
                               users={users}

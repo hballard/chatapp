@@ -1,5 +1,4 @@
 import React from 'react'
-import gql from 'graphql-tag'
 import { Mutation, Query } from 'react-apollo'
 import Button from '@material-ui/core/Button'
 import FormControl from '@material-ui/core/FormControl'
@@ -11,6 +10,8 @@ import Paper from '@material-ui/core/Paper'
 import Typography from '@material-ui/core/Typography'
 import teal from '@material-ui/core/colors/teal'
 import { withStyles } from '@material-ui/core/styles'
+
+import { GET_USERS, ADD_USER, GET_CLIENT_SESSION_ID } from '../graphql'
 
 const styles = theme => ({
   paper: {
@@ -38,35 +39,6 @@ const styles = theme => ({
     }
   }
 })
-
-const ADD_USER = gql`
-  mutation addUser($name: String!, $sessionId: String!) {
-    addUser(name: $name, sessionId: $sessionId) {
-      ok
-      user {
-        id
-        name
-        sessionId
-        status
-      }
-    }
-  }
-`
-
-const GET_USERS = gql`
-  query getUsers {
-    users {
-      edges {
-        node {
-          id
-          name
-          sessionId
-          status
-        }
-      }
-    }
-  }
-`
 
 class SignInModal extends React.Component {
   state = {
@@ -117,13 +89,7 @@ class SignInModal extends React.Component {
               >
                 {addUser => {
                   return (
-                    <Query
-                      query={gql`
-                        query sessionIdState {
-                          sessionId @client
-                        }
-                      `}
-                    >
+                    <Query query={GET_CLIENT_SESSION_ID}>
                       {({ data: { sessionId } }) => (
                         <React.Fragment>
                           <Typography variant="title">

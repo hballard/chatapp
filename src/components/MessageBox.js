@@ -1,6 +1,5 @@
 import React from 'react'
 import { Query, Mutation } from 'react-apollo'
-import gql from 'graphql-tag'
 import Button from '@material-ui/core/Button'
 import FormControl from '@material-ui/core/FormControl'
 import Grid from '@material-ui/core/Grid'
@@ -9,6 +8,8 @@ import Input from '@material-ui/core/Input'
 import InputLabel from '@material-ui/core/InputLabel'
 import teal from '@material-ui/core/colors/teal'
 import { withStyles } from '@material-ui/core/styles'
+
+import { ADD_MSG, GET_MSGS, GET_CLIENT_LOCALUSER } from '../graphql'
 
 const styles = theme => ({
   container: {
@@ -44,34 +45,6 @@ const styles = theme => ({
   }
 })
 
-const ADD_MSG = gql`
-  mutation addMessage($message: String!, $userId: ID!) {
-    addMessage(message: $message, userId: $userId) {
-      ok
-      message {
-        id
-        message
-        datetime
-        userId
-      }
-    }
-  }
-`
-const GET_MSGS = gql`
-  query getMessages {
-    messages {
-      edges {
-        node {
-          id
-          datetime
-          message
-          userId
-        }
-      }
-    }
-  }
-`
-
 class ChatBubble extends React.Component {
   state = {
     message: ''
@@ -96,13 +69,7 @@ class ChatBubble extends React.Component {
   render() {
     const { classes } = this.props
     return (
-      <Query
-        query={gql`
-          query messageBoxClientState {
-            localUser @client
-          }
-        `}
-      >
+      <Query query={GET_CLIENT_LOCALUSER}>
         {({ data: { localUser } }) => (
           <Mutation
             mutation={ADD_MSG}
